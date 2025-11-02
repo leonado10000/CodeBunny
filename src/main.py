@@ -53,7 +53,7 @@ def main():
         pr_number = github_context['event']['pull_request']['number']
         diff_url = github_context['event']['pull_request']['diff_url']
 
-        print("Authenticating as PR_AGENT...")
+        print("Authenticating as CodeBunny...")
         access_token = get_installation_access_token()
         print("Authentication successful.")
 

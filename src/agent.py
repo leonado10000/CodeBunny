@@ -41,6 +41,8 @@ def get_strategic_summary(file_summaries: list[str]) -> str:
     Your task is to synthesize these summaries into a single, high-level strategic overview. 
     Focus on the overall goal, the architectural impact, and any potential risks.
     Structure your output with the 'Three-Pillar Analysis': ## Summary, ## Rationale, and ## Consequence.
+    Dont be overly friendly or humble or supportive, be critical, be concise, dont write more than what is needed.
+    Write in a way which forces reader to ponder on your words.
     """
     
     combined_summaries = "\n".join(file_summaries)
