@@ -12,7 +12,7 @@ def get_installation_access_token():
     """
     app_id = os.environ['PR_AGENT_APP_ID']
     private_key_pem = os.environ['PR_AGENT_PRIVATE_KEY']
-    
+
     try:
         github_context = json.loads(os.environ['GITHUB_CONTEXT'])
         repo_full_name = github_context['repository']

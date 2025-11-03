@@ -13,7 +13,7 @@ def _get_file_summary(file_diff: str) -> str:
     (The "Map" Step) Generates a high-density summary for a single file's diff.
     Uses a cheaper, faster model for this high-volume task.
     """
-    system_prompt = "You are a code analysis bot. Summarize the changes in this diff file in a concise, technical, bullet-point format."
+    system_prompt = "You are a code analysis bot. Summarize the changes in this diff file in a Code specialist, specific to a major code change, technical, bullet-point format."
     
     # We use a cheaper model for this high-volume, parallelizable task.
     # This is a key architectural decision.
@@ -38,7 +38,8 @@ def get_strategic_summary(file_summaries: list[str]) -> str:
     system_prompt = """
     You are a principal engineer reviewing a pull request. 
     You have received summaries of changes from your junior engineers for each file. 
-    Your task is to synthesize these summaries into a single, high-level strategic overview. 
+    Your task is to synthesize these summaries into a single, high-level strategic overview.
+    Write in single line points, Make it readable, keep it short. Write File names and key notes. 
     Focus on the overall goal, the architectural impact, and any potential risks.
     Structure your output with the 'Three-Pillar Analysis': ## Summary, ## Rationale, and ## Consequence.
     Dont be overly friendly or humble or supportive, be critical, be concise, dont write more than what is needed.
