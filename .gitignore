@@ -6,4 +6,3 @@ __pycache__/
 .env
 .run_local
 env.yml
-.env.yml
