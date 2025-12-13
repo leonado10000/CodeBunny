@@ -4,7 +4,7 @@ import json
 import jwt
 import requests
 
-def get_installation_access_token():
+def get_installation_access_token(github_context):
     """
     Generates an App JWT, uses it to find the repo's installation ID,
     and then exchanges it for a short-lived installation access token.
@@ -12,9 +12,9 @@ def get_installation_access_token():
     """
     app_id = os.environ['PR_AGENT_APP_ID']
     private_key_pem = os.environ['PR_AGENT_PRIVATE_KEY']
-    
+
     try:
-        github_context = json.loads(os.environ['GITHUB_CONTEXT'])
+        # github_context = json.loads(os.environ['GITHUB_CONTEXT'])
         repo_full_name = github_context['repository']
     except (KeyError, json.JSONDecodeError) as e:
         print(f"FATAL: Could not read repository name from GitHub context. Error: {e}")

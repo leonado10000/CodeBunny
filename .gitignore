@@ -5,3 +5,5 @@ __pycache__/
 # Environment
 .env
 .run_local
+env.yml
+.env.yml
