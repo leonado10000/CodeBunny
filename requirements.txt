@@ -3,3 +3,5 @@ pyjwt[crypto]
 openai
 google-generativeai
 python-dotenv
+uvicorn[standard]
+fastapi
