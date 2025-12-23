@@ -4,6 +4,7 @@
 
 <h1>CodeBunny 🐰</h1>
 
+
 <p>
 <strong>Your new AI-powered code review assistant.</strong>
 </p>
