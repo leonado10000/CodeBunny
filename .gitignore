@@ -6,3 +6,7 @@ __pycache__/
 .env
 .run_local
 env.yml
+local.env
+
+fix_env.py
+pr-agent-007.2025-12-23.private-key.pem
