@@ -24,7 +24,7 @@ jobs:
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: CodeBunny running checks
+      - name: CodeBunny sniffing the carrot
         env:
           PR_AGENT_APP_ID: ${{ secrets.PR_AGENT_APP_ID }}
           PR_AGENT_PRIVATE_KEY: ${{ secrets.PR_AGENT_PRIVATE_KEY }}
