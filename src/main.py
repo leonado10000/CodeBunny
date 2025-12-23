@@ -4,8 +4,8 @@ import json
 import requests
 import uvicorn
 from fastapi import FastAPI, Request, HTTPException
-from src.auth import get_installation_access_token
-from src.agent import _get_file_summary, get_strategic_summary
+from auth import get_installation_access_token
+from agent import _get_file_summary, get_strategic_summary
 
 app = FastAPI()
 
