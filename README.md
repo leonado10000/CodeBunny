@@ -1,108 +1,102 @@
-﻿<div align="center">
+<div align="center">
 
-<!-- Replace with your own logo later! -->
+🐰 CodeBunny
 
-<h1>CodeBunny 🐰</h1>
+The AI-Powered Code Review Agent
 
-<p>
-<strong>Your new AI-powered code review assistant.</strong>
-</p>
-<p>
-CodeBunny helps you review pull requests faster, smarter, and with more context—so you can merge with confidence.
-</p>
-
-<!-- Badges - Add your own links later -->
-
-<p>
-<img src="https://www.google.com/search?q=https://img.shields.io/badge/build-passing-brightgreen" alt="Build Status">
-<img src="https://www.google.com/search?q=https://img.shields.io/badge/license-MIT-blue" alt="License">
-<img src="https://www.google.com/search?q=https://img.shields.io/github/stars/your-username/codebunny%3Fstyle%3Dsocial" alt="GitHub Stars">
-</p>
+CodeBunny is a serverless, event-driven AI agent that acts as a Principal Engineer for your pull requests.
 
 </div>
 
-What is CodeBunny?
+🚀 Overview
 
-Hello there! 👋 CodeBunny is a GitHub App that acts as a friendly, super-intelligent assistant on your team. When you open a pull request, CodeBunny hops in, reads the changes, and posts a comprehensive analysis right in the comments.
+Most AI coding tools just summarize diffs. CodeBunny understands context.
 
-It's not just another "summary" bot. CodeBunny is built on a powerful multi-AI architecture to provide a deep, three-pillar analysis of every PR:
+It uses a novel Two-Pass "Map-Reduce" Architecture to analyze massive Pull Requests that would choke standard LLM wrappers. It doesn't just say what changed; it analyzes the repository structure to tell you why it matters and what the risks are.
 
-✨ The Summary (The "What"): A clean, high-level overview of what changed.
+Key Features
 
-🤔 Inferred Rationale (The "Why"): An intelligent guess at the business or technical reason behind the change.
+🧠 Two-Pass Brain: * Phase 1 (The Map): Parallelized analysis of individual files using fast models (GPT-4o mini).
 
-🚨 Consequence Analysis (The "What Next"): A breakdown of potential risks, side effects, and items to double-check before merging.
+Phase 2 (The Reduce): Strategic synthesis using high-reasoning models (GPT-4o mini/Gemini Pro) injected with full repository tree context.
 
-[IMAGE-PLACEHOLDER: A large, high-quality GIF showing CodeBunny posting its full three-pillar analysis on a new Pull Request.]
-<p align="center">CodeBunny delivering a full review on a new PR.</p>
+🛡️ Enterprise-Grade Security: Authenticates as a GitHub App using RS256-signed JWTs. No personal access tokens required.
 
-</div>
+⚡ Event-Driven & Serverless: Deploys as a stateless Docker container on Render/Cloud Run. Triggered instantly by GitHub Webhooks.
 
+🔍 Repo-Aware: Fetches and analyzes the file tree to detect high-risk changes (e.g., changes to auth/ or billing/ directories).
 
+🏗️ Architecture
 
-
-Core Features
-
-Three-Pillar Analysis: Get the "What," "Why," and "What Next" for every PR.
-
-🧠 Handles Huge PRs: CodeBunny uses a special Two-Pass Brain to analyze pull requests of any size—even 10,000+ lines—that make other bots choke.
-
-🤖 Multi-Provider AI: It intelligently uses a mix of the best models (like GPT-4o mini for speed and Gemini Pro for reasoning) to give you the highest quality analysis at the lowest cost.
-
-✅ One-Click Install: No complex setup or CI/CD configuration. Just install the GitHub App, and you're done.
-
-(Coming Soon) Deep Repo Context: CodeBunny will understand your entire file structure, not just the diff, to warn you about changes in sensitive areas (like /src/core/security/).
-
-Why CodeBunny?
-
-We've all been there. A teammate opens a massive pull request. Reviewing it feels like a chore, and generic AI summaries don't really help you understand the risk.
-
-CodeBunny is different by design.
-
-It Won't Choke: Most review bots fail on large PRs. CodeBunny's "Two-Pass Brain" first uses a team of "Analyst" AIs to summarize each file in parallel. Then, it sends those summaries to a "Strategist" AI to synthesize the final, high-level report. It's built for real-world complexity.
-
-It Provides Insight, Not Just Info: The "Consequence Analysis" is a game-changer. It's like having a senior engineer tap you on the shoulder and say, "This looks good, but did you check if the database migration is backward-compatible?"
-
-[IMAGE-PLACEHOLDER: A GIF showing CodeBunny's analysis of a very large PR, proving it can handle it.]
-<p align="center">CodeBunny handling a 10,000+ line PR with ease.</p>
-
-</div>
+CodeBunny operates as a microservice triggered by GitHub Actions.
 
 
 
 
-Getting Started
+🛠️ Installation (For Your Repo)
 
-Getting CodeBunny on your team is a breeze. We're packaging it as a one-click GitHub App (coming soon!).
+You can add CodeBunny to any repository in 3 steps.
 
-Go to the CodeBunny GitHub Marketplace Page [Link to be added]
+1. Deploy the Brain
 
-Click 'Install' and choose the repositories you want CodeBunny to watch.
+Click the "Deploy to Render" button above, or deploy the Docker container manually.
 
-...That's it. 🎉
+Environment Variables Required:
 
-The next time you open a pull request, CodeBunny will be there to help!
+PR_AGENT_APP_ID: Your GitHub App ID.
 
-We're Just Getting Started!
+PR_AGENT_PRIVATE_KEY: Your App's Private Key (PEM format).
 
-CodeBunny is a new project, and we're buzzing with ideas. Our roadmap includes:
+OPENAI_API_KEY: Your LLM Provider Key.
 
-Custom fine-tuned models to give CodeBunny a unique, expert personality.
+2. Connect the Action
 
-A/B testing and MLOps integration to publicly prove our model's quality.
+In your repository, go to Settings > Secrets > Actions and add:
 
-Deeper repo context to understand the full impact of a change.
+CODEBUNNY_SERVICE_URL: The URL of your deployed service (e.g., https://codebunny.onrender.com).
 
-Contributing
+3. Add the Workflow
 
-We'd love your help! This is an open-source project for developers, by developers. Whether you're a prompt engineer, a front-end dev, or an MLOps guru, there's a place for you.
+Create .github/workflows/codebunny.yml:
 
-Check out our CONTRIBUTING.md file to get started. PRs are always welcome!
+name: '🐰 CodeBunny Agent'
 
-<p align="center">
-Made with ❤️ by Rahul
-</p>
-<p align="center">
-Licensed under the <a href="LICENSE">MIT License</a>.
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
 
-</p>
+jobs:
+  dispatch_analysis:
+    name: 🥕 Dispatch to HQ
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📡 Contacting CodeBunny Brain
+        run: |
+          curl -X POST "${{ secrets.CODEBUNNY_SERVICE_URL }}/webhook/github" \
+          -H "Content-Type: application/json" \
+          -d '${{ toJSON(github) }}' \
+          --fail
+
+
+🧪 Local Development
+
+Clone the repo
+
+git clone [https://github.com/yourusername/CodeBunny.git](https://github.com/yourusername/CodeBunny.git)
+cd CodeBunny
+
+
+Install Dependencies
+
+pip install -r requirements-dev.txt
+
+
+Run Tests
+We use pytest-mock to simulate GitHub payloads locally.
+
+python local_run.py
+
+
+📜 License
+
+MIT License. Built with ❤️ by [Your Name].
