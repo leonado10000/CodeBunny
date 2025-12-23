@@ -7,7 +7,7 @@ import json
 
 # UNCOMMENT THIS FOR LOCAL DOCKER TESTING
 # NOTE: On Windows, use http://127.0.0.1:8080, NOT http://0.0.0.0:8080
-SERVICE_URL = "http://127.0.0.1:8080"
+SERVICE_URL = "https://codebunny-5o9o.onrender.com"
 
 ENDPOINT = f"{SERVICE_URL}/webhook/github"
 
