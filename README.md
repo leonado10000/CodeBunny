@@ -38,9 +38,6 @@ It's not just another "summary" bot. CodeBunny is built on a powerful multi-AI a
 
 </div>
 
-
-
-
 Core Features
 
 Three-Pillar Analysis: Get the "What," "Why," and "What Next" for every PR.
