@@ -23,7 +23,7 @@ CodeBunny helps you review pull requests faster, smarter, and with more context�
 
 What is CodeBunny?
 
-Hey there! 👋 CodeBunny is a GitHub App that acts as a friendly, super-intelligent assistant on your team. When you open a pull request, CodeBunny hops in, reads the changes, and posts a comprehensive analysis right in the comments.
+Hello there! 👋 CodeBunny is a GitHub App that acts as a friendly, super-intelligent assistant on your team. When you open a pull request, CodeBunny hops in, reads the changes, and posts a comprehensive analysis right in the comments.
 
 It's not just another "summary" bot. CodeBunny is built on a powerful multi-AI architecture to provide a deep, three-pillar analysis of every PR:
 
