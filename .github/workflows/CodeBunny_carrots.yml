@@ -1,34 +1,28 @@
-name: 'CodeBunny Analysis'
+name: '🐰 CodeBunny Agent'
 
 on:
   pull_request:
-    types: [opened, reopened]
+    # 'synchronize' ensures the bot runs again if the user pushes new code to the PR
+    types: [opened, reopened, synchronize]
 
 jobs:
-  analyze:
+  dispatch_analysis:
+    name: 🥕 Dispatch to HQ
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-      contents: read
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install Dependencies
+      - name: 📡 Contacting CodeBunny Brain (Render)
+        id: webhook
         run: |
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-
-      - name: CodeBunny sniffing the carrot
-        env:
-          PR_AGENT_APP_ID: ${{ secrets.PR_AGENT_APP_ID }}
-          PR_AGENT_PRIVATE_KEY: ${{ secrets.PR_AGENT_PRIVATE_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GITHUB_CONTEXT: ${{ toJSON(github) }}
-        run: python src/main.py
+          echo "🥕 Sniffing the carrot... (Sending Webhook)"
+          
+          # We use curl to send the event data to your Render server.
+          # --fail ensures the job turns Red if Render returns an error (4xx/5xx).
+          # --max-time ensures we don't hang forever if the server is cold.
+          
+          curl -v -X POST "${{ secrets.CODEBUNNY_SERVICE_URL }}/webhook/github" \
+          -H "Content-Type: application/json" \
+          -d '${{ toJSON(github) }}' \
+          --fail \
+          --max-time 100
+          
+          echo "✅ Signal received. Analysis in progress."
