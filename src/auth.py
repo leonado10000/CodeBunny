@@ -4,19 +4,19 @@ import json
 import jwt
 import requests
 
-def get_installation_access_token(github_context):
+def get_installation_access_token(github_context: dict):
     """
     Generates an App JWT, uses it to find the repo's installation ID,
     and then exchanges it for a short-lived installation access token.
-    This is a hardened, explicit authentication method.
     """
     app_id = os.environ['PR_AGENT_APP_ID']
     private_key_pem = os.environ['PR_AGENT_PRIVATE_KEY']
-
+    
     try:
-        # github_context = json.loads(os.environ['GITHUB_CONTEXT'])
+        # --- FIX: Read repository as a string directly ---
         repo_full_name = github_context['repository']
-    except (KeyError, json.JSONDecodeError) as e:
+        # -------------------------------------------------
+    except KeyError as e:
         print(f"FATAL: Could not read repository name from GitHub context. Error: {e}")
         raise
 
@@ -45,7 +45,7 @@ def get_installation_access_token(github_context):
         print(f"Successfully found installation ID for PR_AGENT: {installation_id}")
     except requests.exceptions.RequestException as e:
         print(f"FATAL: Could not get installation ID for repo '{repo_full_name}'.")
-        print("ACTION REQUIRED: Ensure the 'PR_AGENT' App is installed on this repository.")
+        print("ACTION REQUIRED: Ensure the 'CodeBunny' App is installed on this repository.")
         print(f"Status: {e.response.status_code}, Body: {e.response.text}")
         raise
 
