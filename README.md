@@ -30,6 +30,7 @@ Phase 2 (The Reduce): Strategic synthesis using high-reasoning models (GPT-4o mi
 
 CodeBunny operates as a microservice triggered by GitHub Actions.
 
+<img src="https://raw.githubusercontent.com/leonado10000/CodeBunny/refs/heads/main/data/flow.png" width="500" alt="Description of image" />
 
 
 
@@ -100,3 +101,4 @@ python local_run.py
 📜 License
 
 MIT License. Built with ❤️ by [Your Name].
+
