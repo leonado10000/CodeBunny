@@ -2,7 +2,6 @@ name: '🐰 CodeBunny Agent'
 
 on:
   pull_request:
-    # 'synchronize' ensures the bot runs again if the user pushes new code to the PR
     types: [opened, reopened, synchronize]
 
 jobs:
@@ -10,19 +9,11 @@ jobs:
     name: 🥕 Dispatch to HQ
     runs-on: ubuntu-latest
     steps:
-      - name: 📡 Contacting CodeBunny Brain (Render)
-        id: webhook
+      - name: 📡 Contacting CodeBunny Brain
         run: |
-          echo "🥕 Sniffing the carrot... (Sending Webhook)"
-          
-          # We use curl to send the event data to your Render server.
-          # --fail ensures the job turns Red if Render returns an error (4xx/5xx).
-          # --max-time ensures we don't hang forever if the server is cold.
-          
-          curl -v -X POST "${{ secrets.CODEBUNNY_SERVICE_URL }}/webhook/github" \
+          # We send the PR data to the CodeBunny public server
+          curl -X POST "https://codebunny-5o9o.onrender.com/webhook/github" \
           -H "Content-Type: application/json" \
           -d '${{ toJSON(github) }}' \
           --fail \
-          --max-time 100
-          
-          echo "✅ Signal received. Analysis in progress."
+          --max-time 600
