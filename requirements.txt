@@ -5,3 +5,5 @@ google-generativeai
 python-dotenv
 uvicorn[standard]
 fastapi
+groq
+pylint

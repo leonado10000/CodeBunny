@@ -1,68 +1,115 @@
 import os
-from openai import OpenAI
-from dotenv import load_dotenv
+import dotenv
+from groq import Groq
+
+# Import our deterministic token optimizer
+from src.optimizer import optimize_payload_for_ai
 
 # Load environment variables
-load_dotenv()
+dotenv.load_dotenv()
 
-# Initialize OpenAI Client
-# Note: If you encounter proxy errors again, use: 
-# import httpx
-# client = OpenAI(api_key=..., http_client=httpx.Client(proxy=None))
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+# Initialize Groq Client
+client = Groq(
+    api_key=os.environ.get("GROQ_API_KEY")
+)
 
-def _get_file_summary(file_diff: str) -> str:
+def _get_file_summary(filepath: str, full_file_content: str, file_diff: str) -> str:
     """
-    (The "Map" Step) Generates a high-density summary for a single file's diff.
+    (The Map Step)
+    Pre-processes the file using AST-based mapping to strip noise, 
+    then uses Llama-3.3 to summarize the engineering impact.
     """
-    system_prompt = "You are a code analysis bot. Summarize the changes in this diff file in a Code specialist, specific to a major code change, technical, bullet-point format."
+    # 1. Deterministic Token Squeezing
+    optimized_payload = optimize_payload_for_ai(filepath, full_file_content, file_diff)
+    
+    system_prompt = """
+    Persona: You are a Principal Software Engineer. You are authoritative, concise, and corrective.
+    
+    Task: Review the deterministic AST-mapped diff. 
+    Rules:
+    1. Focus on "The Main Thing" (impactful architectural/logic concerns).
+    2. Prioritize 'Pylint Flags' if present.
+    3. Provide a 1-line code example for corrections.
+    4. Ignore minor low-stack issues.
+    
+    Format:
+    ### [Function/Module Name]
+    - **Issue:** [The critical logic or pattern concern]
+    - **Correction:** [Example code or specific directive]
+    - **Impact:** [High/Med/Low] - [Risk description]
+    """
     
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
+        completion = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": file_diff},
+                {"role": "user", "content": optimized_payload},
             ],
             temperature=0.0,
+            max_tokens=1024
         )
-        return response.choices[0].message.content
+        
+        summary = completion.choices[0].message.content
+        return f"#### 📄 File: {filepath}\n{summary}"
+        
     except Exception as e:
-        return f"Error summarizing file: {e}"
+        return f"Error analyzing {filepath}: {str(e)}"
 
 def get_strategic_summary(file_summaries: list[str], repo_tree: str) -> str:
     """
-    (The "Reduce" Step) Takes file summaries AND repo structure to synthesize a high-level overview.
+    (The Reduce Step)
+    Synthesizes the collection of file-level summaries into a Principal-level report.
+    This version includes both the raw problems and the high-level guidance.
     """
-    # We inject the repo_tree into the system prompt for context
     system_prompt = f"""
-    You are a principal engineer reviewing a pull request. 
-    You have received summaries of changes from your junior engineers for each file. 
+    Persona: Principal Engineer. You are a mentor and a guardian of the codebase. 
+    You are conscious of your words, collective in your outlook, and focused on growth.
     
-    Your task is to synthesize these summaries into a single, high-level strategic overview.
-    
-    --- REPOSITORY STRUCTURE CONTEXT ---
-    {repo_tree}
-    ------------------------------------
+    Task: Synthesize file reviews into high-level engineering guidance. 
+    Do NOT summarize. Instead, provide directives and mentorship.
 
-    Write in single line points, Make it readable, keep it short. Write File names and key notes. 
-    Focus on the overall goal, the architectural impact, and any potential risks (especially if changes touch sensitive files in the repo structure).
-    Structure your output with the 'Three-Pillar Analysis': ## Summary, ## Rationale, and ## Consequence.
-    Dont be overly friendly or humble or supportive, be critical, be concise, dont write more than what is needed.
-    Write in a way which forces reader to ponder on your words.
+    --- REPOSITORY CONTEXT ---
+    {repo_tree}
+    --------------------------
+
+    Instructions:
+    - Use the following sections: '## 🎯 Engineering Directives', '## 💡 Mentorship & Guidance', and '## 🏗️ Architectural Outlook'.
+    - Engineering Directives: Absolute "must-fixes" for this PR to meet quality standards.
+    - Mentorship & Guidance: Explain "why" certain patterns are better, helping the dev level up.
+    - Architectural Outlook: How this change shifts the structural integrity of the project.
+    - Be authoritative but constructive. Focus only on what needs improvement.
     """
     
-    combined_summaries = "\n".join(file_summaries)
+    combined_summaries = "\n\n".join(file_summaries)
     
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
+        completion = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"Here are the file summaries:\n{combined_summaries}"},
+                {"role": "user", "content": f"Summaries to synthesize:\n{combined_summaries}"},
             ],
-            temperature=0.2,
+            temperature=0.1,
+            max_tokens=2048
         )
-        return response.choices[0].message.content
+        
+        synthesis = completion.choices[0].message.content
+        
+        # We return both the detailed problems and the strategic guidance for the PR
+        final_report = f"""
+# 🐰 CodeBunny Principal Review
+
+{synthesis}
+
+---
+
+## 🔍 Detailed File-Level Audits
+Below are the specific technical findings for each modified component.
+
+{combined_summaries}
+        """
+        return final_report.strip()
+        
     except Exception as e:
-        return f"Error generating strategic summary: {e}"
+        return f"Error in strategic synthesis: {str(e)}"

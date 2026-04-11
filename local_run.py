@@ -1,65 +1,99 @@
 import os
 import sys
-import json
-from unittest.mock import patch
 from dotenv import load_dotenv
 
-# --- ADD THIS BLOCK ---
-# Add the 'src' directory to the Python path
-# This allows our script to find the 'src.main' and other modules
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'src')))
-# ----------------------
+from pathlib import Path
+root_path = Path(__file__).resolve().parent.parent
+sys.path.append(str(root_path))
 
-from main import main
+from src.optimizer import optimize_payload_for_ai
+from src.agent import _get_file_summary, get_strategic_summary
 
-# Load a .env file from the current directory
+# Load API Keys
 load_dotenv()
 
-def run_local_test():
-    """
-    Simulates the GitHub Actions environment to run the main script locally.
-    This makes a REAL call to the OpenAI API but mocks the GitHub API calls.
-    """
-    print("--- Starting Local Integration Test ---")
+def run_local_simulation():
+    print("🚀 --- CodeBunny Local Logic Simulation --- 🚀\n")
 
-    # Load the sample diff file
-    with open('tests\\65852.diff.txt', 'r') as f:
-        sample_diff_text = f.read()
+    # 1. API KEY CHECK
+    if not os.getenv("GROQ_API_KEY"):
+        print("❌ ERROR: GROQ_API_KEY not found in .env file.")
+        return
 
-    # Mock the functions that interact with GitHub. We don't want to post comments.
-    with patch('main.get_installation_access_token', return_value="dummy_github_token"), \
-         patch('main.get_pr_diff', return_value=sample_diff_text), \
-         patch('main.post_pr_comment') as mock_post_comment:
+    # 2. MOCK INPUTS (Simulating what main.py fetches from GitHub)
+    filepath = "sample.py"
+    
+    # Realistic source code (The "New" version of the file)
+    mock_full_content = """
+import os
 
-        # Set up the fake GitHub context
-        os.environ['GITHUB_CONTEXT'] = json.dumps({
-            'repository': 'your-username/pr-agent',
-            'event': {
-                'pull_request': {
-                    'number': 123,
-                    'diff_url': 'rahul jangra'
-                }
-            }
-        })
-        
-        # Check if the key was loaded from the .env file
-        if 'OPENAI_API_KEY' not in os.environ:
-            print("FATAL: OPENAI_API_KEY not found. Ensure it's set in your .env file.")
-            return
+def calculate_discount(price, discount):
+    if discount > 1:
+        raise ValueError("Discount too high")
+    return price * (1 - discount)
 
-        # Run the main application logic
-        main()
+async def get_user_profile(user_id):
+    \"\"\"Fetches user data from the DB.\"\"\"
+    # Simulating a logic change here
+    print(f"Fetching user {user_id}...")
+    user = {"id": user_id, "active": True}
+    return user
+"""
 
-        # Assert that our comment function was called with the AI's output
-        print("\n--- Test Assertions ---")
-        mock_post_comment.assert_called_once()
-        args, kwargs = mock_post_comment.call_args
-        posted_summary = args[3] # The 'body' argument of post_pr_comment
+    # Realistic Diff (Simulating the PR changes)
+    mock_diff = """--- a/sample.py
++++ b/sample.py
+@@ -3,2 +3,4 @@
+ def calculate_discount(price, discount):
++    if discount > 1:
++        raise ValueError("Discount too high")
+     return price * (1 - discount)
+@@ -8,2 +10,3 @@
+     \"\"\"Fetches user data from the DB.\"\"\"
++    print(f"Fetching user {user_id}...")
+     user = {"id": user_id, "active": True}
+"""
 
-        print(f"Verified that post_pr_comment was called.")
-        print(f"Summary that would have been posted:\n---\n{posted_summary}\n---")
+    mock_repo_tree = "src/main.py\nsrc/agent_groq.py\nsample.py\nrequirements.txt"
 
-        assert len(posted_summary) > 20
+    # ==========================================
+    # STEP 1: TEST THE OPTIMIZER (The Token Squeezer)
+    # ==========================================
+    print("🛠️  [STEP 1] Testing Optimizer Inputs/Outputs...")
+    print(f"INPUT: filepath='{filepath}', content_len={len(mock_full_content)}, diff_len={len(mock_diff)}")
+    
+    optimized_payload = optimize_payload_for_ai(filepath, mock_full_content, mock_diff)
+    
+    print("\nOUTPUT (Optimized Payload for AI):")
+    print("-" * 30)
+    print(optimized_payload)
+    print("-" * 30 + "\n")
 
-if __name__ == '__main__':
-    run_local_test()
+    # ==========================================
+    # STEP 2: TEST THE MAP AGENT (File-Level Review)
+    # ==========================================
+    print("🤖 [STEP 2] Testing Map Agent (Groq AI)...")
+    
+    # This simulates the loop in main.py
+    file_summary = _get_file_summary(filepath, mock_full_content, mock_diff)
+    
+    print("\nOUTPUT (Groq File Summary):")
+    print("-" * 30)
+    print(file_summary)
+    print("-" * 30 + "\n")
+
+    # ==========================================
+    # STEP 3: TEST THE REDUCE AGENT (Strategic Summary)
+    # ==========================================
+    print("🧠 [STEP 3] Testing Reduce Agent (Strategic Synthesis)...")
+    
+    file_summaries = [file_summary] # Simulate a list of summaries
+    final_report = get_strategic_summary(file_summaries, mock_repo_tree)
+    
+    print("\nOUTPUT (Final Strategic Report):")
+    print("-" * 60)
+    print(final_report)
+    print("-" * 60 + "\n")
+
+if __name__ == "__main__":
+    run_local_simulation()
