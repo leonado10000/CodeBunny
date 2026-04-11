@@ -4,10 +4,11 @@ import requests
 import uvicorn
 import re
 from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import RedirectResponse
 
-# Using the updated Groq-based logic
+# Use absolute imports for agent logic
 from src.auth import get_installation_access_token
-from src.agent import _get_file_summary, get_strategic_summary
+from src.agent_groq import _get_file_summary, get_strategic_summary
 
 app = FastAPI()
 
@@ -83,7 +84,15 @@ def extract_filepath(file_diff: str) -> str:
     match = re.search(r'b/(\S+)', file_diff)
     return match.group(1) if match else "unknown"
 
-# --- The Main API Endpoint ---
+# --- API Endpoints ---
+
+@app.get("/")
+async def root_redirect():
+    """
+    Handles GET requests to the root URL.
+    Redirects users to the project documentation/landing page.
+    """
+    return RedirectResponse(url="https://rahul-jangra-leonado10000.vercel.app/projects/codebunny")
 
 @app.post("/webhook/github")
 async def handle_github_webhook(request: Request):
@@ -132,20 +141,16 @@ async def handle_github_webhook(request: Request):
 
         # 4. MAP STEP (File Audits)
         file_diff_blocks = parse_diff_into_files(full_diff)
-        # Limit to top 8 most complex changes to maintain performance
         file_diff_blocks = sorted(file_diff_blocks, key=lambda x: len(x), reverse=True)[:8]
         
         file_summaries = []
         for block in file_diff_blocks:
             path = extract_filepath(block)
             content = get_file_content(token, repo_name, path, head_sha)
-            
-            # This generates the corrective file-level review
             summary = _get_file_summary(path, content, block)
             file_summaries.append(summary)
 
         # 5. REDUCE STEP (Strategic Mentorship)
-        # This generates the Principal Engineering report AND combines the audits
         final_report = get_strategic_summary(file_summaries, repo_tree)
         
         # 6. POST TO GITHUB

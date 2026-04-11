@@ -3,7 +3,7 @@ import dotenv
 from groq import Groq
 
 # Import our deterministic token optimizer
-from src.optimizer import optimize_payload_for_ai
+from src.token_optimizer import optimize_payload_for_ai
 
 # Load environment variables
 dotenv.load_dotenv()
@@ -15,28 +15,22 @@ client = Groq(
 
 def _get_file_summary(filepath: str, full_file_content: str, file_diff: str) -> str:
     """
-    (The Map Step)
-    Pre-processes the file using AST-based mapping to strip noise, 
-    then uses Llama-3.3 to summarize the engineering impact.
+    (Map Step) Blunt, technical audit of a single file.
     """
-    # 1. Deterministic Token Squeezing
     optimized_payload = optimize_payload_for_ai(filepath, full_file_content, file_diff)
     
     system_prompt = """
-    Persona: You are a Principal Software Engineer. You are authoritative, concise, and corrective.
-    
-    Task: Review the deterministic AST-mapped diff. 
+    Persona: Principal Engineer. Blunt, authoritative, zero fluff. 
+    Task: Audit the AST-mapped diff. 
     Rules:
-    1. Focus on "The Main Thing" (impactful architectural/logic concerns).
-    2. Prioritize 'Pylint Flags' if present.
-    3. Provide a 1-line code example for corrections.
-    4. Ignore minor low-stack issues.
+    1. Identify only the most critical logic or structural issue.
+    2. Ignore trivialities (style, minor logs).
+    3. Use exactly this format:
     
-    Format:
-    ### [Function/Module Name]
-    - **Issue:** [The critical logic or pattern concern]
-    - **Correction:** [Example code or specific directive]
-    - **Impact:** [High/Med/Low] - [Risk description]
+    ### [Function/Module]
+    - **Issue:** [Short, blunt description]
+    - **Fix:** `[One-line code example]`
+    - **Risk:** [Low/Med/High]
     """
     
     try:
@@ -47,38 +41,32 @@ def _get_file_summary(filepath: str, full_file_content: str, file_diff: str) -> 
                 {"role": "user", "content": optimized_payload},
             ],
             temperature=0.0,
-            max_tokens=1024
+            max_tokens=512
         )
         
         summary = completion.choices[0].message.content
-        return f"#### 📄 File: {filepath}\n{summary}"
+        return f"**File: {filepath}**\n{summary}"
         
     except Exception as e:
-        return f"Error analyzing {filepath}: {str(e)}"
+        return f"Error: {str(e)}"
 
 def get_strategic_summary(file_summaries: list[str], repo_tree: str) -> str:
     """
-    (The Reduce Step)
-    Synthesizes the collection of file-level summaries into a Principal-level report.
-    This version includes both the raw problems and the high-level guidance.
+    (Reduce Step) High-level architectural directives. 
+    Focuses strictly on improvements and required actions.
     """
     system_prompt = f"""
-    Persona: Principal Engineer. You are a mentor and a guardian of the codebase. 
-    You are conscious of your words, collective in your outlook, and focused on growth.
+    Persona: Principal Engineer. Guardian of the codebase. 
+    Task: Review file audits and provide collective guidance.
     
-    Task: Synthesize file reviews into high-level engineering guidance. 
-    Do NOT summarize. Instead, provide directives and mentorship.
+    Rules:
+    1. No summaries. No "I've reviewed". No respectful filler.
+    2. Focus only on what MUST be improved.
+    3. Be extremely brief.
 
-    --- REPOSITORY CONTEXT ---
+    --- REPO TREE ---
     {repo_tree}
-    --------------------------
 
-    Instructions:
-    - Use the following sections: '## 🎯 Engineering Directives', '## 💡 Mentorship & Guidance', and '## 🏗️ Architectural Outlook'.
-    - Engineering Directives: Absolute "must-fixes" for this PR to meet quality standards.
-    - Mentorship & Guidance: Explain "why" certain patterns are better, helping the dev level up.
-    - Architectural Outlook: How this change shifts the structural integrity of the project.
-    - Be authoritative but constructive. Focus only on what needs improvement.
     """
     
     combined_summaries = "\n\n".join(file_summaries)
@@ -88,28 +76,24 @@ def get_strategic_summary(file_summaries: list[str], repo_tree: str) -> str:
             model="llama-3.3-70b-versatile",
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"Summaries to synthesize:\n{combined_summaries}"},
+                {"role": "user", "content": f"Audits:\n{combined_summaries}"},
             ],
-            temperature=0.1,
-            max_tokens=2048
+            temperature=0.0,
+            max_tokens=1024
         )
         
         synthesis = completion.choices[0].message.content
         
-        # We return both the detailed problems and the strategic guidance for the PR
-        final_report = f"""
-# 🐰 CodeBunny Principal Review
+        # Combined output for PR: Guidance first, then raw file audits
+        return f"""
+# 🐰 Principal Review
 
 {synthesis}
 
 ---
-
-## 🔍 Detailed File-Level Audits
-Below are the specific technical findings for each modified component.
-
+### 🔍 Technical Findings
 {combined_summaries}
-        """
-        return final_report.strip()
+        """.strip()
         
     except Exception as e:
-        return f"Error in strategic synthesis: {str(e)}"
+        return f"Error in synthesis: {str(e)}"

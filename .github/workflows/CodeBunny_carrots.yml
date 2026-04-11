@@ -9,11 +9,32 @@ jobs:
     name: 🥕 Dispatch to HQ
     runs-on: ubuntu-latest
     steps:
-      - name: 📡 Contacting CodeBunny Brain
+      - name: 🔍 Wellness Check
+        id: health_check
         run: |
-          # We send the PR data to the CodeBunny public server
+          # Check if the service is reachable before sending heavy PR data
+          # We use a 5-second connection timeout to avoid hanging the PR
+          if curl -s --head --request GET "https://codebunny-5o9o.onrender.com/" --connect-timeout 5 --max-time 10 | grep "200 OK" > /dev/null; then
+            echo "status=online" >> $GITHUB_OUTPUT
+            echo "✅ CodeBunny is online and ready."
+          else
+            echo "status=offline" >> $GITHUB_OUTPUT
+            echo "⚠️ CodeBunny is currently on hold or unreachable."
+          fi
+
+      - name: 📡 Dispatching Analysis
+        if: steps.health_check.outputs.status == 'online'
+        run: |
+          # Trigger the analysis. The server handles the AI processing asynchronously.
+          # We use a lower max-time here because we only care if the server ACCEPTED the task.
           curl -X POST "https://codebunny-5o9o.onrender.com/webhook/github" \
           -H "Content-Type: application/json" \
           -d '${{ toJSON(github) }}' \
           --fail \
-          --max-time 600
+          --max-time 60
+          
+      - name: 🔕 Agent Status Note
+        if: steps.health_check.outputs.status == 'offline'
+        run: |
+          echo "Notice: CodeBunny analysis skipped because the brain is currently on hold."
+          echo "No action required; your PR remains valid."
