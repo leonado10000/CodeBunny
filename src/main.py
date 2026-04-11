@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 
 # Use absolute imports for agent logic
 from src.auth import get_installation_access_token
-from src.agent_groq import _get_file_summary, get_strategic_summary
+from src.agent import _get_file_summary, get_strategic_summary
 
 app = FastAPI()
 
