@@ -3,7 +3,7 @@ import dotenv
 from groq import Groq
 
 # Import our deterministic token optimizer
-from src.token_optimizer import optimize_payload_for_ai
+from src.optimizer import optimize_payload_for_ai
 
 # Load environment variables
 dotenv.load_dotenv()
