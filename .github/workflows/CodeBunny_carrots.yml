@@ -8,12 +8,41 @@ jobs:
   dispatch_analysis:
     name: 🥕 Dispatch to HQ
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write # Required for posting the offline comment
     steps:
-      - name: 📡 Contacting CodeBunny Brain
+      - name: 🔍 Wellness Check
+        id: health_check
         run: |
-          # We send the PR data to the CodeBunny public server
+          # Use curl to get the HTTP status code of the root endpoint
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://codebunny-5o9o.onrender.com/" --connect-timeout 5 --max-time 10)
+          
+          if [ "$HTTP_STATUS" -eq 200 ]; then
+            echo "status=online" >> $GITHUB_OUTPUT
+            echo "✅ CodeBunny is online (Status: $HTTP_STATUS)."
+          else
+            echo "status=offline" >> $GITHUB_OUTPUT
+            echo "⚠️ CodeBunny is unreachable (Status: $HTTP_STATUS)."
+          fi
+
+      - name: 📡 Dispatching Analysis
+        if: steps.health_check.outputs.status == 'online'
+        run: |
+          # Dispatch and exit immediately. The server handles the long-running AI task.
           curl -X POST "https://codebunny-5o9o.onrender.com/webhook/github" \
           -H "Content-Type: application/json" \
           -d '${{ toJSON(github) }}' \
           --fail \
-          --max-time 600
+          --max-time 30
+          
+      - name: 💬 Post Offline Comment
+        if: steps.health_check.outputs.status == 'offline'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: "🐰 **CodeBunny Status:** The agent is currently on hold (server unreachable). Analysis skipped."
+            })
