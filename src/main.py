@@ -4,7 +4,7 @@ import requests
 import uvicorn
 import re
 from fastapi import FastAPI, Request, HTTPException, BackgroundTasks
-from fastapi.responses import JSONResponse
+from fastapi.responses import RedirectResponse
 
 # Use absolute imports for agent logic
 from src.auth import get_installation_access_token
@@ -135,16 +135,8 @@ def run_analysis_task(payload: dict):
 
 @app.get("/")
 async def health_check():
-    """
-    Standard 200 OK endpoint for GitHub Actions.
-    Ensures the 'curl' check in the workflow passes reliably.
-    """
-    return JSONResponse(
-        content={
-            "status": "ready",
-            "agent": "CodeBunny",
-            "info": "https://rahul-jangra-leonado10000.vercel.app/projects/codebunny"
-        },
+    return RedirectResponse(
+        url="https://rahul-jangra-leonado10000.vercel.app/projects/codebunny",
         status_code=200
     )
 
