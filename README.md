@@ -1,104 +1,83 @@
-<div align="center">
+<div align="center">  
+<img src="[https://raw.githubusercontent.com/leonado10000/CodeBunny/main/data/logo.png](https://www.google.com/url?sa=E&source=gmail&q=https://raw.githubusercontent.com/leonado10000/CodeBunny/main/data/logo.png)" alt="CodeBunny Logo" width="120" height="120">
 
-🐰 CodeBunny
+# **🐰 CodeBunny**
 
-The AI-Powered Code Review Agent
+### **The Blunt AI Code Reviewer**
 
-CodeBunny is a serverless, event-driven AI agent that acts as a Principal Engineer for your pull requests.
-
+CodeBunny is a high-speed AI agent that acts as a **Principal Engineer** for your Pull Requests. It skips the fluff and tells you exactly what needs to be fixed to meet professional standards.  
+[**Install App**](https://www.google.com/search?q=https://github.com/apps/codebunny) • [**View Demo**](https://www.google.com/search?q=https://rahul-jangra-leonado10000.vercel.app/projects/codebunny) • [**Report Bug**](https://www.google.com/search?q=https://github.com/leonado10000/CodeBunny/issues)  
 </div>
 
-🚀 Overview
+## **🚀 Overview**
 
-Most AI coding tools just summarize diffs. CodeBunny understands context.
+Most AI tools just summarize code changes. **CodeBunny audits them.** By deconstructing your code structure before analysis, it focuses strictly on logic, architectural risk, and best practices. It behaves like a senior developer who has seen it all and wants your code to be production-ready—now.
 
-It uses a novel Two-Pass "Map-Reduce" Architecture to analyze massive Pull Requests that would choke standard LLM wrappers. It doesn't just say what changed; it analyzes the repository structure to tell you why it matters and what the risks are.
+## **🛠️ Key Features**
 
-Key Features
+| Feature | Description |
+| :---- | :---- |
+| 👔 **Principal Persona** | Provides blunt, corrective feedback and one-line code examples. |
+| 🏗️ **Structural Awareness** | Understands function boundaries and logic flow via AST mapping. |
+| ⚡ **Instant Reviews** | Powered by Groq LPUs for near-instant feedback on your PRs. |
+| 🚥 **Quality Gates** | Automatically flags missing docs, complex functions, and naming violations. |
 
-🧠 Two-Pass Brain: * Phase 1 (The Map): Parallelized analysis of individual files using fast models (GPT-4o mini).
+## **📦 Tech Stack**
 
-Phase 2 (The Reduce): Strategic synthesis using high-reasoning models (GPT-4o mini/Gemini Pro) injected with full repository tree context.
+* **Brain:** Llama 3.3 (70B) via **Groq** for high-speed inference.  
+* **Analysis:** Python AST (Abstract Syntax Tree) for deterministic code mapping.  
+* **Linter:** Pylint integration for automated code quality scoring.  
+* **Backend:** FastAPI & Uvicorn.  
+* **Infrastructure:** GitHub Actions & Render.
 
-🛡️ Enterprise-Grade Security: Authenticates as a GitHub App using RS256-signed JWTs. No personal access tokens required.
+## **📥 How to Use**
 
-⚡ Event-Driven & Serverless: Deploys as a stateless Docker container on Render/Cloud Run. Triggered instantly by GitHub Webhooks.
+Add CodeBunny to your repo in **2 minutes**:
 
-🔍 Repo-Aware: Fetches and analyzes the file tree to detect high-risk changes (e.g., changes to auth/ or billing/ directories).
+### **1️⃣ Install the App**
 
-🏗️ Architecture
+### **Grant the [CodeBunny GitHub App](https://www.google.com/search?q=https://github.com/apps/codebunny) access to your repository.**
 
-CodeBunny operates as a microservice triggered by GitHub Actions.
+### **2️⃣ Add the Workflow**
 
-<img src="https://raw.githubusercontent.com/leonado10000/CodeBunny/refs/heads/main/data/flow.png" width="500" alt="Description of image" />
+Create .github/workflows/codebunny.yml in your repo:  
+```
+name: '🐰 CodeBunny Agent'  
+on:  
+  pull\_request:  
+    types: \[opened, reopened, synchronize\]
 
+jobs:  
+  review:  
+    runs-on: ubuntu-latest  
+    permissions: { pull-requests: write }  
+    steps:  
+      \- name: 🔍 Wellness Check  
+        id: health  
+        run: |  
+          STATUS=$(curl \-s \-o /dev/null \-w "%{http\_code}" "https://codebunny-5o9o.onrender.com/")  
+          if \[ "$STATUS" \-eq 200 \]; then echo "status=online" \>\> $GITHUB\_OUTPUT; fi
 
+      \- name: 📡 Dispatch Analysis  
+        if: steps.health.outputs.status \== 'online'  
+        run: |  
+          curl \-X POST "https://codebunny-5o9o.onrender.com/webhook/github" \\  
+          \-H "Content-Type: application/json" \-d '${{ toJSON(github) }}' \--fail \--max-time 30
+```
+## **🧪 Local Testing**
 
-🛠️ Installation (For Your Repo)
+Test the logic on your machine:
 
-You can add CodeBunny to any repository in 3 steps.
-
-1. Deploy the Brain
-
-Click the "Deploy to Render" button above, or deploy the Docker container manually.
-
-Environment Variables Required:
-
-PR_AGENT_APP_ID: Your GitHub App ID.
-
-PR_AGENT_PRIVATE_KEY: Your App's Private Key (PEM format).
-
-OPENAI_API_KEY: Your LLM Provider Key.
-
-2. Connect the Action
-
-In your repository, go to Settings > Secrets > Actions and add:
-
-CODEBUNNY_SERVICE_URL: The URL of your deployed service (e.g., https://codebunny.onrender.com).
-
-3. Add the Workflow
-
-Create .github/workflows/codebunny.yml:
-
-name: '🐰 CodeBunny Agent'
-
-on:
-  pull_request:
-    types: [opened, reopened, synchronize]
-
-jobs:
-  dispatch_analysis:
-    name: 🥕 Dispatch to HQ
-    runs-on: ubuntu-latest
-    steps:
-      - name: 📡 Contacting CodeBunny Brain
-        run: |
-          curl -X POST "${{ secrets.CODEBUNNY_SERVICE_URL }}/webhook/github" \
-          -H "Content-Type: application/json" \
-          -d '${{ toJSON(github) }}' \
-          --fail
-
-
-🧪 Local Development
-
-Clone the repo
-
-git clone [https://github.com/yourusername/CodeBunny.git](https://github.com/yourusername/CodeBunny.git)
-cd CodeBunny
-
-
-Install Dependencies
-
-pip install -r requirements-dev.txt
-
-
-Run Tests
-We use pytest-mock to simulate GitHub payloads locally.
-
-python local_run.py
-
-
-📜 License
-
-MIT License. Built with ❤️ by [Your Name].
-
+1. **Clone & Install**  
+```
+   git clone https://github.com/leonado10000/CodeBunny.git  
+   cd CodeBunny  
+   pip install \-r requirements.txt
+```
+3. **Run Audit Simulation**  
+```
+   python local\_run.py
+```
+<div align="center">  
+Built with ❤️ by [Rahul Jangra](https://www.google.com/search?q=https://rahul-jangra-leonado10000.vercel.app/projects/codebunny)  
+\</div\>
