@@ -34,14 +34,14 @@ def _get_file_summary(filepath: str, full_file_content: str, file_diff: str) -> 
     """
 
     SYSTEM_PROMPT_LEN = len(system_prompt)
-    TOKEN_LIMIT = 12000
+    SIZE_LIMIT = 20000
     
     try:
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": optimized_payload[:TOKEN_LIMIT - SYSTEM_PROMPT_LEN]},
+                {"role": "user", "content": optimized_payload[:SIZE_LIMIT - SYSTEM_PROMPT_LEN]},
             ],
             temperature=0.0,
             max_tokens=512
@@ -79,7 +79,7 @@ def get_strategic_summary(file_summaries: list[str], repo_tree: str) -> str:
             model="llama-3.3-70b-versatile",
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"Audits:\n{combined_summaries}"},
+                {"role": "user", "content": f"Audits:\n{combined_summaries}"[:20000 - len(system_prompt)]},
             ],
             temperature=0.0,
             max_tokens=1024
