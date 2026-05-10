@@ -25,20 +25,23 @@ def _get_file_summary(filepath: str, full_file_content: str, file_diff: str) -> 
     Rules:
     1. Identify only the most critical logic or structural issue.
     2. Ignore trivialities (style, minor logs).
-    3. Use exactly this format:
+    3. Use format:
     
     ### [Function/Module]
     - **Issue:** [Short, blunt description]
     - **Fix:** `[One-line code example]`
     - **Risk:** [Low/Med/High]
     """
+
+    SYSTEM_PROMPT_LEN = len(system_prompt)
+    TOKEN_LIMIT = 12000
     
     try:
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": optimized_payload},
+                {"role": "user", "content": optimized_payload[:TOKEN_LIMIT - SYSTEM_PROMPT_LEN]},
             ],
             temperature=0.0,
             max_tokens=512
