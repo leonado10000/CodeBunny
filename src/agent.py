@@ -25,20 +25,23 @@ def _get_file_summary(filepath: str, full_file_content: str, file_diff: str) -> 
     Rules:
     1. Identify only the most critical logic or structural issue.
     2. Ignore trivialities (style, minor logs).
-    3. Use exactly this format:
+    3. Use format:
     
     ### [Function/Module]
     - **Issue:** [Short, blunt description]
     - **Fix:** `[One-line code example]`
     - **Risk:** [Low/Med/High]
     """
+
+    SYSTEM_PROMPT_LEN = len(system_prompt)
+    SIZE_LIMIT = 20000
     
     try:
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": optimized_payload},
+                {"role": "user", "content": optimized_payload[:SIZE_LIMIT - SYSTEM_PROMPT_LEN]},
             ],
             temperature=0.0,
             max_tokens=512
@@ -48,7 +51,15 @@ def _get_file_summary(filepath: str, full_file_content: str, file_diff: str) -> 
         return f"**File: {filepath}**\n{summary}"
         
     except Exception as e:
-        return f"Error: {str(e)}"
+        return (
+            f"[ERROR] "
+            f"type={type(e).__name__} | "
+            f"msg={str(e)} | "
+            f"file={filepath} | "
+        f"payload_chars={len(optimized_payload)} | "
+        f"diff_chars={len(file_diff)} | "
+        f"file_chars={len(full_file_content)}"
+    )
 
 def get_strategic_summary(file_summaries: list[str], repo_tree: str) -> str:
     """
@@ -76,7 +87,7 @@ def get_strategic_summary(file_summaries: list[str], repo_tree: str) -> str:
             model="llama-3.3-70b-versatile",
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"Audits:\n{combined_summaries}"},
+                {"role": "user", "content": f"Audits:\n{combined_summaries}"[:20000 - len(system_prompt)]},
             ],
             temperature=0.0,
             max_tokens=1024
@@ -96,4 +107,11 @@ def get_strategic_summary(file_summaries: list[str], repo_tree: str) -> str:
         """.strip()
         
     except Exception as e:
-        return f"Error in synthesis: {str(e)}"
+        return (
+            f"[ERROR] "
+            f"type={type(e).__name__} | "
+            f"msg={str(e)} | "
+            f"summaries={len(file_summaries)} | "
+            f"combined_chars={len(combined_summaries)} | "
+            f"repo_tree_chars={len(repo_tree)}"
+        )
