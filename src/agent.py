@@ -51,7 +51,15 @@ def _get_file_summary(filepath: str, full_file_content: str, file_diff: str) -> 
         return f"**File: {filepath}**\n{summary}"
         
     except Exception as e:
-        return f"Error: {str(e)}"
+        return (
+            f"[ERROR] "
+            f"type={type(e).__name__} | "
+            f"msg={str(e)} | "
+            f"file={filepath} | "
+        f"payload_chars={len(optimized_payload)} | "
+        f"diff_chars={len(file_diff)} | "
+        f"file_chars={len(full_file_content)}"
+    )
 
 def get_strategic_summary(file_summaries: list[str], repo_tree: str) -> str:
     """
@@ -99,4 +107,11 @@ def get_strategic_summary(file_summaries: list[str], repo_tree: str) -> str:
         """.strip()
         
     except Exception as e:
-        return f"Error in synthesis: {str(e)}"
+        return (
+            f"[ERROR] "
+            f"type={type(e).__name__} | "
+            f"msg={str(e)} | "
+            f"summaries={len(file_summaries)} | "
+            f"combined_chars={len(combined_summaries)} | "
+            f"repo_tree_chars={len(repo_tree)}"
+        )
